@@ -1,0 +1,167 @@
+using System.ComponentModel.DataAnnotations;
+using System.Data.Entity;
+
+namespace Sava;
+
+public class ShopDbContext : DbContext
+{
+
+    public ShopDbContext() : base("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\Users\\Student\\source\\repos\\ConsoleApp167\\db.mdf;Integrated Security=True;Connect Timeout=30")
+    {
+
+    }
+
+    public DbSet<Product> Products { get; set; }
+
+    public DbSet<Worker> Workers { get; set; }
+
+    public DbSet<Shop> Shops { get; set; }
+
+
+}
+public class Shop
+{
+    [Key]
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public List<Worker> Workers { get; set; }
+    public List<Product> Products { get; set; }
+
+    public Shop()
+    {
+
+
+
+    }
+
+    public Shop(string Name)
+    {
+
+        this.Name = Name;
+        Workers = new List<Worker>();
+        Products = new List<Product>();
+    }
+
+
+
+}
+public class Product
+{
+
+    [Key]
+    public int Id { get; set; }
+
+    public string Name { get; set; }
+
+    public double Price { get; set; }
+
+    public Product()
+    {
+
+
+
+    }
+
+    public Product(string NamePrice)
+    {
+
+        List<string> splitied = NamePrice.Split(" ").ToList();
+
+        Name = splitied[0];
+        Price = double.Parse(splitied[1]);
+
+    }
+
+    public Shop Shop { get; set; }
+
+}
+public class Worker
+{
+
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Position { get; set; }
+    public double Salary { get; set; }
+
+    public Shop Shop { get; set; }
+
+    public Worker()
+    {
+
+
+
+    }
+
+    public Worker(string NamePositionSalary)
+    {
+
+        List<string> splitied = NamePositionSalary.Split(" ").ToList();
+
+        Name = splitied[0];
+        Position = splitied[1];
+        Salary = double.Parse(splitied[2]);
+
+    }
+
+
+}
+
+public class Program
+{
+    static public void AddShop(Shop shop)
+    {
+
+        using (ShopDbContext db = new ShopDbContext())
+        {
+
+            db.Shops.Add(shop);
+
+            db.SaveChanges();
+
+        }
+
+    }
+
+    static void AddWorker(Worker worker, int shopId)
+    {
+
+        using (ShopDbContext db = new ShopDbContext())
+        {
+
+            Shop shop = db.Shops.FirstOrDefault(n => n.Id == shopId);
+            worker.Shop = shop;
+            db.Workers.Add(worker);
+            shop.Workers.Add(worker);
+
+            db.SaveChanges();
+
+
+        }
+
+    }
+
+    static void Main(string[] args)
+    {
+
+
+        using (ShopDbContext db = new ShopDbContext())
+        {
+
+            var shops = db.Shops.Include(shop => shop.Workers).ToList();
+
+            foreach (Shop shop in shops)
+            {
+
+                Console.WriteLine($"-------|{shop.Name}|-------");
+                foreach (Worker work in shop.Workers)
+                {
+                    Console.WriteLine(work.Name);
+                }
+            }
+        }
+
+
+    }
+
+
+}
